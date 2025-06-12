@@ -1,0 +1,667 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #2b2d42;
+    --secondary-color: #8d99ae;
+    --accent-color: #00ffcc; /* Changed to a Neon Cyan */
+    --accent-color-rgb: 0, 255, 204;
+    --light-accent: #33ffdd; /* Lighter Neon Cyan */
+    --light-accent-rgb: 51, 255, 221;
+    --dark-bg: #0a0a14; /* Even darker background */
+    --dark-bg-rgb: 10, 10, 20;
+    --card-bg: rgba(16, 18, 30, 0.75); /* Adjusted card base */
+    --light-text: #f0f4f8; /* Brighter, more neutral light text */
+    --medium-text: #c0c8d0; /* Significantly brighter medium text */
+    --border-color-glass: rgba(0, 255, 204, 0.2); /* Neon border base */
+    --input-bg: rgba(0, 0, 0, 0.3);
+    --glow-color: rgba(var(--accent-color-rgb), 0.5);
+    --font-mono: 'Courier New', Courier, monospace; /* Define monospace font */
+}
+
+@keyframes subtleGridPulse {
+    0% { background-size: 40px 40px; opacity: 0.03; }
+    50% { background-size: 42px 42px; opacity: 0.05; }
+    100% { background-size: 40px 40px; opacity: 0.03; }
+}
+
+/* Use a slightly more specific selector or add !important if needed */
+html, body.login-page-body { 
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body.login-page-body { 
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--dark-bg);
+    color: var(--light-text);
+    line-height: 1.6;
+    /* Removed display: grid and place-items */
+    min-height: 100%; /* Keep height */
+    padding: 1rem; 
+    box-sizing: border-box; 
+    overflow: hidden; 
+    position: relative; /* Important: Context for absolutely positioned children like footer */
+}
+
+/* Ensure these don't conflict with new.html body if custom-styles is reused */
+/* We added login-page-body class to scope */
+
+/* Login Container - Centering using Absolute Positioning */
+.login-container {
+    width: 100%; 
+    max-width: 400px;
+    position: absolute;   /* Position absolutely */
+    top: 50%;             /* Move top edge to vertical center */
+    left: 50%;            /* Move left edge to horizontal center */
+    transform: translate(-50%, -50%); /* Offset by half its own size */
+    z-index: 1; /* Ensure it's above potential background elements */
+}
+
+.glass-card {
+    background: rgba(var(--card-bg), 0.85);
+    backdrop-filter: blur(8px); /* Keep blur subtle */
+    border-radius: 12px; /* Sharper corners */
+    border: 1px solid var(--border-color-glass);
+    box-shadow: 0 0 25px rgba(var(--accent-color-rgb), 0.1), /* Neon outer glow */
+                0 8px 30px rgba(0, 0, 0, 0.5); /* Standard shadow */
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+     border-color: rgba(var(--accent-color-rgb), 0.4); 
+     box-shadow: 0 0 35px rgba(var(--accent-color-rgb), 0.2), 
+                 0 10px 35px rgba(0, 0, 0, 0.55); 
+}
+
+/* Form Label Styles */
+.form-label-custom {
+    display: block;
+    margin-bottom: 0.5rem; 
+    font-size: 0.85rem; 
+    color: var(--secondary-color); 
+    font-weight: 400; 
+    text-align: left;
+    text-transform: uppercase; /* Uppercase labels */
+    letter-spacing: 0.5px;
+}
+
+/* Input field - Tech look */
+.form-control-custom {
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--border-color-glass) !important; 
+    color: var(--light-text) !important;
+    padding: 0.9rem 1.1rem !important; 
+    text-indent: 0;
+    border-radius: 8px; /* Consistent rounding */
+    width: 100%;
+    transition: all 0.25s ease-in-out;
+    position: relative; 
+    font-size: 1rem; /* Ensure readability */
+    caret-color: var(--accent-color); /* Neon caret */
+}
+
+.form-control-custom::placeholder {
+    color: var(--medium-text);
+    opacity: 0.5; /* Softer placeholder */
+}
+
+.form-control-custom:focus {
+    background-color: rgba(var(--dark-bg-rgb), 0.4) !important; 
+    border-color: var(--accent-color) !important; 
+    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2), /* Neon focus ring */
+                inset 0 0 5px rgba(var(--accent-color-rgb), 0.1); /* Inner glow */
+    outline: none;
+}
+
+/* Button - Neon / Tech Style */
+.btn-modern {
+    background-color: transparent; /* Transparent base */
+    border: 2px solid var(--accent-color); /* Neon border */
+    color: var(--accent-color); /* Neon text */
+    font-weight: 500;
+    padding: 0.8rem 1.75rem; 
+    border-radius: 8px; 
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2); /* Subtle glow */
+    text-decoration: none;
+    display: inline-block;
+    text-transform: uppercase; /* Uppercase text */
+    letter-spacing: 1px; 
+    font-size: 0.9rem; 
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    /* Remove properties from previous solid button style */
+    background-image: none;
+    background-position: initial;
+}
+
+.btn-modern:hover, .btn-modern:focus {
+    background-color: rgba(var(--accent-color-rgb), 0.1); /* Neon fill on hover */
+    color: var(--light-text); /* Text color change on hover */
+    box-shadow: 0 0 20px rgba(var(--accent-color-rgb), 0.4); /* Enhanced glow */
+    transform: translateY(-2px); 
+}
+
+.btn-modern:active {
+    background-color: rgba(var(--accent-color-rgb), 0.2); /* Slightly stronger fill on active */
+    transform: translateY(0px); 
+    box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.3);
+    filter: none;
+}
+
+/* Title specific style */
+.login-title {
+    font-family: var(--font-mono); /* Apply monospace font */
+    color: var(--accent-color); /* Neon color */
+    text-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.5); /* Neon text glow */
+    font-size: 2rem; /* Adjust size */
+    margin-bottom: 0.75rem; /* Adjust spacing */
+    font-weight: 700;
+}
+
+/* Error message */
+#login-error {
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    color: var(--light-accent);
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--accent-color-rgb), 0.2);
+    font-size: 0.9rem;
+    font-weight: 400; /* Less bold */
+}
+
+/* Login Footer */
+.login-footer {
+    position: absolute;
+    bottom: 15px; 
+    left: 0;
+    right: 0;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    text-align: center;
+    color: var(--medium-text);
+    z-index: 0; 
+}
+
+/* --- Styles for new.html - Home Page --- */
+
+/* Hero Section - Apply glass-card style */
+.hero-section-home {
+    /* Inherit base .glass-card styles from above, or redefine if needed */
+    background: linear-gradient(145deg, rgba(var(--primary-color-rgb, 43, 45, 66), 0.7), rgba(var(--dark-bg-rgb), 0.85)); /* Slightly different gradient */
+    backdrop-filter: blur(8px) saturate(100%); /* Less intense than login card */
+    border-radius: 16px;
+    border: 1px solid rgba(var(--border-color-glass), 0.5);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    padding: 3rem 2.5rem; /* Adjusted padding */
+    text-align: center;
+    margin-bottom: 3rem; /* More space below hero */
+    animation: subtleFadeInUp 0.8s ease-out forwards;
+    /* Remove the ::before pseudo-element if .glass-card has it */
+    overflow: visible; /* Allow potential overhang if needed */
+    position: static; /* Reset position if inherited */
+}
+
+.hero-section-home h1 {
+    font-size: 2.5rem; /* Slightly smaller */
+    font-weight: 600;
+    color: var(--light-text); /* Brighter title */
+    text-shadow: none; /* Remove text shadow for cleaner look */
+    margin-bottom: 1rem;
+}
+
+.hero-section-home p.lead {
+    font-size: 1.1rem; /* Slightly smaller lead */
+    margin-bottom: 0; /* Remove extra margin if no button */
+    color: var(--medium-text); /* Softer lead color */
+    max-width: 800px; /* Limit width for readability */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Feature Container - Adjust for less flashy cards */
+.feature-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+    gap: 1.5rem; /* Increased gap between cards */
+    background-color: transparent; /* Remove container background */
+    border-radius: 0; /* Remove container rounding */
+    overflow: visible; /* Allow cards to have shadow */
+    margin-bottom: 3rem;
+    box-shadow: none; /* Remove container shadow */
+}
+
+/* Feature Card - More professional look */
+.feature-card {
+    background-color: rgba(var(--primary-color-rgb, 43, 45, 66), 0.35); /* Subtle card background */
+    backdrop-filter: none; /* Remove blur if desired */
+    border-radius: 12px; /* Softer rounding */
+    border: 1px solid rgba(var(--border-color-glass), 0.4);
+    padding: 2rem 1.5rem;
+    transition: all 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Subtler shadow */
+    /* Reset hover effects from previous iteration */
+    transform: none;
+}
+
+.feature-card:hover {
+    background-color: rgba(var(--primary-color-rgb, 43, 45, 66), 0.5); /* Slightly lighten on hover */
+    transform: translateY(-5px); /* Simple lift effect */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2); /* Enhanced shadow on hover */
+}
+
+.feature-card .feature-icon {
+    font-size: 2.5rem; /* Slightly smaller icons */
+    margin-bottom: 1.25rem;
+    color: var(--accent-color); /* Use main accent color */
+    transition: transform 0.3s ease;
+    /* Reset icon hover effects */
+    transform: none;
+}
+
+.feature-card:hover .feature-icon {
+     transform: scale(1.1); /* Simple scale effect */
+}
+
+.feature-card h3 {
+    color: var(--light-text);
+    font-size: 1.25rem; /* Adjusted size */
+    margin-bottom: 0.75rem;
+    font-weight: 500; /* Slightly lighter weight */
+}
+
+.feature-card p {
+    color: var(--medium-text);
+    font-size: 0.9rem; /* Smaller text */
+    line-height: 1.5;
+}
+
+/* Ensure default body styles apply correctly to new.html body */
+body:not(.login-page) { /* Assuming login.html might get a class */
+   display: block; /* Override display:flex from login styles */
+   justify-content: initial;
+   align-items: initial;
+   padding: 0; /* Remove padding meant for centered login */
+   background: var(--dark-bg); /* Ensure correct background */
+    /* Re-apply body background if needed and not inherited */
+   background-image: linear-gradient(to bottom, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0) 15%);
+}
+
+/* Adjustments for navbar if needed */
+.navbar {
+    /* Existing styles likely okay, but ensure background/shadow fit */
+    background-color: rgba(var(--dark-bg-rgb), 0.85); /* Ensure consistent dark bg */
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(var(--border-color-glass), 0.5);
+}
+
+/* Styles for Nav Links */
+.nav-link {
+    color: var(--light-text) !important; /* Ensure light color */
+    font-weight: 500;
+    margin: 0 10px;
+    padding: 8px 15px !important;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    position: relative;
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white !important; /* Keep light on hover */
+}
+
+.nav-link.active {
+    background-color: rgba(var(--accent-color-rgb), 0.15);
+    color: var(--accent-color) !important; /* Use accent color for active link */
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; /* Position below the link */
+    left: 15%;
+    width: 70%;
+    height: 3px; /* Make underline slightly thicker */
+    background-color: var(--accent-color);
+    border-radius: 3px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: var(--light-text); /* Ensure headings use the bright text */
+}
+
+/* General Text Element Styling */
+p, li, span, div { /* Apply base color to common text elements */
+    /* Be careful with broad selectors, might need refinement */
+    /* Consider applying this within specific containers like .main-container */
+    /* color: var(--medium-text); */ /* Let's start by ensuring body color is inherited first */
+}
+
+.main-container p,
+.main-container li {
+    color: var(--medium-text); /* Set default paragraph/list color in main content */
+}
+
+.main-container .lead { /* Ensure lead paragraphs are readable */
+     color: var(--light-text); /* Use brighter text for lead */
+}
+
+/* Override Bootstrap muted text if needed */
+.text-muted {
+    color: var(--secondary-color) !important; /* Use our secondary color, ensure visibility */
+}
+
+/* Ensure table text is readable */
+.table td, .table th {
+    color: var(--light-text); 
+}
+.table th {
+     color: var(--medium-text); /* Slightly dimmer for headers */
+}
+
+/* Feature Card paragraph text color */
+.feature-card p {
+    color: var(--medium-text);
+}
+
+/* Ensure user profile name is bright */
+.user-profile-name {
+    color: var(--light-text);
+    font-weight: 500;
+}
+
+.user-avatar-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+    /* vertical-align: middle; */ /* Replaced by flex align-items on parent */
+}
+
+/* Ensure footer text is readable, though it's intentionally muted */
+.login-footer,
+.footer {
+     color: var(--secondary-color); /* Use secondary instead of medium */
+}
+
+.code-card h3 {
+    color: var(--accent-color); /* Use accent color for code card titles */
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(var(--border-color-glass), 0.5);
+    font-weight: 500; /* Adjusted weight */
+    line-height: 1.5; /* Improve line spacing */
+}
+
+.code-content {
+    background-color: rgba(var(--dark-bg-rgb), 0.5); /* Use dark bg with alpha */
+    padding: 1.25rem; /* Increased padding */
+    border-radius: 8px; /* Consistent rounding */
+    color: var(--light-text) !important; /* Ensure bright text color */
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px;
+    white-space: pre-wrap;
+    border: 1px solid rgba(var(--border-color-glass), 0.5);
+    line-height: 1.5; /* Improve line spacing */
+}
+
+/* User profile link in navbar */
+a.navbar-user-profile,
+a.navbar-user-profile:hover,
+a.navbar-user-profile:focus {
+    text-decoration: none !important;
+    display: flex;
+    align-items: center;
+    /* color: inherit; */ /* Uncomment if needed, or set specific color */
+}
+
+/* --- Styles for Transaction Screening Page (#transaction) --- */
+
+/* General card styling for all pages */
+.hero-card {
+    background: var(--card-bg); /* Consistent with glass-card */
+    backdrop-filter: blur(5px); /* Slightly less blur than login for content areas */
+    border-radius: 12px;
+    border: 1px solid var(--border-color-glass);
+    box-shadow: 0 0 15px rgba(var(--accent-color-rgb), 0.05),
+                0 4px 20px rgba(0, 0, 0, 0.4);
+    padding: 1.75rem; /* Standardized padding */
+    color: var(--medium-text); /* Default text color within these cards */
+}
+
+/* General styling for headings in cards */
+.hero-card h1,
+.hero-card h2,
+.hero-card h3,
+.hero-card h4,
+.hero-card h5 {
+    color: var(--light-text); /* Brighter headings */
+}
+
+/* Input area styling for all pages */
+.form-select.bg-dark,
+.form-control.bg-dark {
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--border-color-glass) !important;
+    color: var(--light-text) !important;
+    padding: 0.75rem 1rem !important; /* Adjusted padding for these controls */
+    border-radius: 8px;
+    transition: all 0.25s ease-in-out;
+    font-size: 0.95rem;
+    caret-color: var(--accent-color);
+}
+
+.form-select.bg-dark {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2300ffcc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important; /* Neon arrow */
+}
+
+.form-control.bg-dark::placeholder {
+    color: var(--medium-text);
+    opacity: 0.6;
+}
+
+.form-select.bg-dark:focus,
+.form-control.bg-dark:focus {
+    background-color: rgba(var(--dark-bg-rgb), 0.5) !important;
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.25),
+                inset 0 0 5px rgba(var(--accent-color-rgb), 0.15);
+    outline: none;
+}
+
+/* Loading state */
+#transaction-loading .spinner-border {
+    color: var(--accent-color) !important;
+}
+
+#transaction-loading .progress {
+    background-color: rgba(var(--accent-color-rgb), 0.1); /* Lighter track for progress */
+    border-radius: 8px;
+    height: 0.75rem;
+}
+
+#transaction-loading .progress-bar {
+    background-color: var(--accent-color) !important;
+}
+
+#transaction-loading h4, 
+#transaction-loading #analysis-status,
+#transaction-loading .small {
+    color: var(--light-text);
+}
+#transaction-loading .small.text-muted { /* Override bootstrap if needed */
+    color: var(--medium-text) !important;
+}
+
+
+/* Result state - Basic Info Card */
+#transaction-result .hero-card .bi { /* Default icon color in this card */
+    color: var(--accent-color);
+    margin-right: 0.5rem; /* Consistent spacing */
+}
+#transaction-result .hero-card .fw-bold {
+    color: var(--light-text);
+}
+#transaction-result .hero-card a {
+    color: var(--light-accent);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+#transaction-result .hero-card a:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
+#transaction-result .hero-card .btn-sm { /* Copy buttons */
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    border: 1px solid rgba(var(--accent-color-rgb), 0.3);
+    color: var(--accent-color);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+#transaction-result .hero-card .btn-sm:hover {
+    background-color: rgba(var(--accent-color-rgb), 0.2);
+    border-color: var(--accent-color);
+    color: var(--light-text);
+}
+#transaction-result #tx-status-badge.bg-secondary { /* Default 'Analyzing...' badge */
+    background-color: var(--secondary-color) !important;
+    color: var(--primary-color) !important;
+}
+#transaction-result #tx-status-badge.bg-success { /* Success badge */
+    background-color: var(--accent-color) !important; /* Use accent for success */
+    color: var(--dark-bg) !important;
+    font-weight: 600;
+}
+
+
+/* Result state - Risk Analysis Graph Card SVG */
+#transaction-graph .graph-node circle {
+    stroke: var(--border-color-glass);
+    stroke-width: 1.5px;
+    fill: rgba(var(--dark-bg-rgb), 0.8); /* Darker fill for nodes */
+}
+#transaction-graph .graph-node text {
+    fill: var(--light-text);
+    font-family: 'Poppins', sans-serif; /* Consistent font */
+    font-size: 10px;
+}
+#transaction-graph .graph-node.level-0 circle { /* Core nodes */
+    fill: rgba(var(--accent-color-rgb), 0.2);
+    stroke: var(--accent-color);
+}
+#transaction-graph .graph-node.level-0 text {
+    font-weight: 600;
+    font-size: 11px;
+}
+
+
+#transaction-graph .graph-edge.level-0 { /* Core edges */
+    stroke: var(--accent-color);
+    stroke-opacity: 0.9;
+}
+#transaction-graph .graph-edge.level-1,
+#transaction-graph .graph-edge.level-2 { /* Secondary edges */
+    stroke: var(--border-color-glass);
+    stroke-opacity: 0.7;
+}
+
+/* Result state - Risk Analysis Results List Card */
+#risk-analysis-results h5 { /* "风险分析结果" title */
+    color: var(--accent-color);
+    border-bottom: 1px solid var(--border-color-glass);
+    padding-bottom: 0.5rem;
+}
+#risk-loading .spinner-border {
+    color: var(--accent-color) !important;
+}
+#risk-loading span {
+    color: var(--light-text);
+}
+
+/* Risk items (the green checkmarks) */
+#risk-results .d-flex.align-items-center .rounded-circle.bg-success {
+    background-color: rgba(var(--accent-color-rgb), 0.25) !important; /* Light accent bg */
+    border: 1px solid var(--accent-color);
+}
+#risk-results .d-flex.align-items-center .rounded-circle.bg-success i {
+    color: var(--accent-color) !important; /* Accent color icon */
+}
+#risk-results .d-flex.align-items-center > div > div:first-child { /* Risk item title */
+    color: var(--light-text);
+}
+#risk-results .d-flex.align-items-center > div > .small.text-muted { /* Risk item description */
+    color: var(--medium-text) !important;
+}
+
+/* User profile link in navbar */
+a.navbar-user-profile,
+a.navbar-user-profile:hover,
+a.navbar-user-profile:focus {
+    text-decoration: none !important;
+    display: flex;
+    align-items: center;
+    /* color: inherit; */ /* Uncomment if needed, or set specific color */
+}
+
+/* Page-specific styling for other pages */
+/* #address .hero-card,
+#code .hero-card,
+#data .hero-card {
+    border: 1px solid var(--border-color-glass);
+    box-shadow: 0 0 15px rgba(var(--accent-color-rgb), 0.05),
+                0 4px 20px rgba(0, 0, 0, 0.4);
+} */
+
+/* Specific title styling for other pages */
+/* #address-initial .col-md-5 .hero-card h1.fs-2,
+#code-initial .col-md-5 .hero-card h1.fs-2,
+#data-initial .col-md-5 .hero-card h1.fs-2 {
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+#address-initial .col-md-5 .hero-card p,
+#code-initial .col-md-5 .hero-card p,
+#data-initial .col-md-5 .hero-card p {
+    color: var(--medium-text);
+} */
+
+/* Ensuring all buttons use consistent styling */
+.btn-modern.w-100 {
+    padding: 0.75rem 1.5rem; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+/* Title styling for all pages */
+.hero-card h1.fs-2 {
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.hero-card p {
+    color: var(--medium-text);
+} 
