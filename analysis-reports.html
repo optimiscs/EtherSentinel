@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分析报告 - 链安卫士</title>
+    <style>
+        :root {
+            --primary-dark: #1a1f2e;
+            --secondary-dark: #2d3748;
+            --accent-cyan: #38b2ac;
+            --accent-blue: #4299e1;
+            --accent-green: #48bb78;
+            --accent-red: #f56565;
+            --accent-orange: #ed8936;
+            --accent-purple: #9f7aea;
+            --text-light: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --hover-bg: #2d3748;
+            --gradient-bg: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+            --success-bg: rgba(72, 187, 120, 0.1);
+            --warning-bg: rgba(237, 137, 54, 0.1);
+            --danger-bg: rgba(245, 101, 101, 0.1);
+            --info-bg: rgba(66, 153, 225, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .container { display: flex; min-height: 100vh; }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--gradient-bg);
+            padding: 2rem 1.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 3rem;
+            padding: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-cyan);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 0.5rem; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            text-decoration: none;
+            color: var(--text-muted);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--hover-bg);
+            color: var(--accent-cyan);
+            transform: translateX(5px);
+        }
+
+        .nav-icon { width: 20px; height: 20px; fill: currentColor; }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-cyan);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-dark);
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        /* 过滤器区域 */
+        .filters-section {
+            background: var(--secondary-dark);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .filter-select {
+            padding: 0.75rem;
+            background: var(--primary-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        /* 报告列表 */
+        .reports-section {
+            background: var(--secondary-dark);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .reports-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .reports-table th,
+        .reports-table td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .reports-table th {
+            background: var(--primary-dark);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reports-table td {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .report-type {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .type-security { background: var(--danger-bg); color: var(--accent-red); }
+        .type-transaction { background: var(--info-bg); color: var(--accent-blue); }
+        .type-contract { background: var(--warning-bg); color: var(--accent-orange); }
+        .type-address { background: var(--success-bg); color: var(--accent-green); }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-completed { background: var(--success-bg); color: var(--accent-green); }
+        .status-processing { background: var(--warning-bg); color: var(--accent-orange); }
+        .status-failed { background: var(--danger-bg); color: var(--accent-red); }
+
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-link {
+            padding: 0.25rem 0.5rem;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .action-link:hover {
+            background: rgba(56, 178, 172, 0.1);
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--secondary-dark);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .change-positive { color: var(--accent-green); }
+        .change-negative { color: var(--accent-red); }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 0.75rem;
+            background: var(--primary-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; padding: 1rem; }
+            .main-content { padding: 1rem; }
+            .page-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .filters-grid { grid-template-columns: 1fr; }
+            .reports-table { font-size: 0.75rem; }
+            .reports-table th, .reports-table td { padding: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+                        <path d="M2 17L12 22L22 17"/>
+                        <path d="M2 12L12 17L22 12"/>
+                    </svg>
+                </div>
+                <h1>链安卫士</h1>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 13H11V3H3V13ZM3 21H11V15H3V21ZM13 21H21V11H13V21ZM13 3V9H21V3H13Z"/>
+                            </svg>
+                            主仪表盘
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="transaction-detection.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/>
+                            </svg>
+                            恶意交易检测
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="address-assessment.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+                            </svg>
+                            地址风险评估
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="contract-analysis.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20Z"/>
+                            </svg>
+                            合约代码分析
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="monitoring-center.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM15.5 16L11 12.5V7H12.5V11.5L16 14.5L15.5 16Z"/>
+                            </svg>
+                            监控中心
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="analysis-reports.html" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
+                            </svg>
+                            分析报告
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="system-settings.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                            </svg>
+                            系统设置
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">分析报告</h1>
+                    <p class="page-subtitle">历史分析数据、安全评估报告和趋势分析</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportReports()">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                        导出报告
+                    </button>
+                    <button class="btn btn-primary" onclick="generateReport()">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+                        </svg>
+                        生成新报告
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">1,247</div>
+                    <div class="stat-label">总报告数</div>
+                    <div class="stat-change change-positive">+15% 本月</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">92%</div>
+                    <div class="stat-label">检测准确率</div>
+                    <div class="stat-change change-positive">+2.3% 较上月</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3,456</div>
+                    <div class="stat-label">发现威胁</div>
+                    <div class="stat-change change-negative">-8% 较上周</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0.82</div>
+                    <div class="stat-label">平均BLEU分</div>
+                    <div class="stat-change change-positive">+0.05 提升</div>
+                </div>
+            </section>
+
+            <!-- 过滤器 -->
+            <section class="filters-section">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">报告类型</label>
+                        <select class="filter-select" id="reportType">
+                            <option value="">全部类型</option>
+                            <option value="security">安全评估</option>
+                            <option value="transaction">交易分析</option>
+                            <option value="contract">合约审计</option>
+                            <option value="address">地址画像</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">时间范围</label>
+                        <select class="filter-select" id="timeRange">
+                            <option value="7d">最近7天</option>
+                            <option value="30d">最近30天</option>
+                            <option value="90d">最近90天</option>
+                            <option value="all">全部时间</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">状态</label>
+                        <select class="filter-select" id="status">
+                            <option value="">全部状态</option>
+                            <option value="completed">已完成</option>
+                            <option value="processing">处理中</option>
+                            <option value="failed">失败</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">搜索</label>
+                        <input type="text" class="filter-select" placeholder="搜索报告名称..." id="searchInput">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 报告列表 -->
+            <section class="reports-section">
+                <div class="section-header">
+                    <h3 class="section-title">分析报告列表</h3>
+                    <span style="color: var(--text-muted); font-size: 0.875rem;">共 156 条记录</span>
+                </div>
+
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th>报告名称</th>
+                            <th>类型</th>
+                            <th>创建时间</th>
+                            <th>状态</th>
+                            <th>风险等级</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>USDT合约安全审计报告</td>
+                            <td><span class="report-type type-security">安全评估</span></td>
+                            <td>2024-01-08 14:23</td>
+                            <td><span class="status-badge status-completed">已完成</span></td>
+                            <td style="color: var(--accent-green);">低风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">查看</a>
+                                    <a href="#" class="action-link">下载</a>
+                                    <a href="#" class="action-link">分享</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>0x742d...恶意交易分析</td>
+                            <td><span class="report-type type-transaction">交易分析</span></td>
+                            <td>2024-01-08 11:45</td>
+                            <td><span class="status-badge status-completed">已完成</span></td>
+                            <td style="color: var(--accent-red);">高风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">查看</a>
+                                    <a href="#" class="action-link">下载</a>
+                                    <a href="#" class="action-link">分享</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>UniswapV3函数名恢复报告</td>
+                            <td><span class="report-type type-contract">合约审计</span></td>
+                            <td>2024-01-07 16:30</td>
+                            <td><span class="status-badge status-processing">处理中</span></td>
+                            <td style="color: var(--accent-orange);">中风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">查看</a>
+                                    <a href="#" class="action-link">取消</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>DeFi地址风险画像分析</td>
+                            <td><span class="report-type type-address">地址画像</span></td>
+                            <td>2024-01-07 09:15</td>
+                            <td><span class="status-badge status-completed">已完成</span></td>
+                            <td style="color: var(--accent-orange);">中风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">查看</a>
+                                    <a href="#" class="action-link">下载</a>
+                                    <a href="#" class="action-link">分享</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>闪电贷攻击事件分析</td>
+                            <td><span class="report-type type-security">安全评估</span></td>
+                            <td>2024-01-06 20:45</td>
+                            <td><span class="status-badge status-failed">失败</span></td>
+                            <td style="color: var(--accent-red);">高风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">重新生成</a>
+                                    <a href="#" class="action-link">删除</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>跨链桥资金流向分析</td>
+                            <td><span class="report-type type-transaction">交易分析</span></td>
+                            <td>2024-01-06 15:20</td>
+                            <td><span class="status-badge status-completed">已完成</span></td>
+                            <td style="color: var(--accent-green);">低风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">查看</a>
+                                    <a href="#" class="action-link">下载</a>
+                                    <a href="#" class="action-link">分享</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>NFT合约安全检测报告</td>
+                            <td><span class="report-type type-contract">合约审计</span></td>
+                            <td>2024-01-05 13:10</td>
+                            <td><span class="status-badge status-completed">已完成</span></td>
+                            <td style="color: var(--accent-green);">低风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">查看</a>
+                                    <a href="#" class="action-link">下载</a>
+                                    <a href="#" class="action-link">分享</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>混币器地址关联分析</td>
+                            <td><span class="report-type type-address">地址画像</span></td>
+                            <td>2024-01-04 18:35</td>
+                            <td><span class="status-badge status-completed">已完成</span></td>
+                            <td style="color: var(--accent-red);">高风险</td>
+                            <td>
+                                <div class="report-actions">
+                                    <a href="#" class="action-link">查看</a>
+                                    <a href="#" class="action-link">下载</a>
+                                    <a href="#" class="action-link">分享</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <button class="page-btn">&laquo;</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">&raquo;</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // 报告管理功能
+        function generateReport() {
+            alert('新报告生成向导将打开...');
+        }
+
+        function exportReports() {
+            alert('报告导出功能启动中...');
+        }
+
+        // 过滤器功能
+        function applyFilters() {
+            const reportType = document.getElementById('reportType').value;
+            const timeRange = document.getElementById('timeRange').value;
+            const status = document.getElementById('status').value;
+            const search = document.getElementById('searchInput').value;
+
+            console.log('应用过滤器:', {
+                reportType, timeRange, status, search
+            });
+            
+            // 这里可以添加实际的过滤逻辑
+        }
+
+        // 分页功能
+        function changePage(page) {
+            document.querySelectorAll('.page-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            console.log('切换到页面:', page);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定过滤器事件
+            document.getElementById('reportType').addEventListener('change', applyFilters);
+            document.getElementById('timeRange').addEventListener('change', applyFilters);
+            document.getElementById('status').addEventListener('change', applyFilters);
+            document.getElementById('searchInput').addEventListener('input', 
+                debounce(applyFilters, 300));
+
+            // 绑定分页事件
+            document.querySelectorAll('.page-btn').forEach((btn, index) => {
+                btn.addEventListener('click', () => changePage(index));
+            });
+
+            // 页面加载动画
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html> 

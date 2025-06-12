@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>监控中心 - 链安卫士</title>
+    <style>
+        :root {
+            --primary-dark: #1a1f2e;
+            --secondary-dark: #2d3748;
+            --accent-cyan: #38b2ac;
+            --accent-green: #48bb78;
+            --accent-red: #f56565;
+            --accent-orange: #ed8936;
+            --accent-yellow: #f6e05e;
+            --text-light: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --hover-bg: #2d3748;
+            --gradient-bg: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+            --success-bg: rgba(72, 187, 120, 0.1);
+            --warning-bg: rgba(237, 137, 54, 0.1);
+            --danger-bg: rgba(245, 101, 101, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 280px;
+            background: var(--gradient-bg);
+            padding: 2rem 1.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 3rem;
+            padding: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-cyan);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            text-decoration: none;
+            color: var(--text-muted);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--hover-bg);
+            color: var(--accent-cyan);
+            transform: translateX(5px);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title-section h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--success-bg);
+            border: 1px solid var(--accent-green);
+            border-radius: 25px;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 顶部监控卡片 */
+        .top-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--secondary-dark);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon.threats {
+            background: var(--danger-bg);
+            color: var(--accent-red);
+        }
+
+        .stat-icon.scans {
+            background: rgba(56, 178, 172, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .stat-icon.alerts {
+            background: var(--warning-bg);
+            color: var(--accent-orange);
+        }
+
+        .stat-icon.blocked {
+            background: var(--success-bg);
+            color: var(--accent-green);
+        }
+
+        .stat-info h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* 主要监控区域 */
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .monitor-card {
+            background: var(--secondary-dark);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 实时威胁地图 */
+        .threat-map {
+            height: 350px;
+            background: var(--primary-dark);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 1.125rem;
+        }
+
+        /* 威胁列表 */
+        .threat-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .threat-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--primary-dark);
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--accent-red);
+        }
+
+        .threat-level {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .level-critical {
+            background: var(--accent-red);
+            box-shadow: 0 0 10px var(--accent-red);
+        }
+
+        .level-high {
+            background: var(--accent-orange);
+        }
+
+        .level-medium {
+            background: var(--accent-yellow);
+        }
+
+        .threat-content {
+            flex: 1;
+        }
+
+        .threat-title {
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .threat-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .threat-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* 系统监控区域 */
+        .system-monitoring {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .monitor-item {
+            background: var(--secondary-dark);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .monitor-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-name {
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .metric-value {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--primary-dark);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-normal {
+            background: var(--accent-green);
+        }
+
+        .progress-warning {
+            background: var(--accent-orange);
+        }
+
+        .progress-critical {
+            background: var(--accent-red);
+        }
+
+        /* 网络活动图表 */
+        .network-chart {
+            height: 200px;
+            background: var(--primary-dark);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        /* 快速操作按钮 */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-cyan);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .monitoring-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .system-monitoring {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .top-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+                        <path d="M2 17L12 22L22 17"/>
+                        <path d="M2 12L12 17L22 12"/>
+                    </svg>
+                </div>
+                <h1>链安卫士</h1>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 13H11V3H3V13ZM3 21H11V15H3V21ZM13 21H21V11H13V21ZM13 3V9H21V3H13Z"/>
+                            </svg>
+                            主仪表盘
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="transaction-detection.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/>
+                            </svg>
+                            恶意交易检测
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="address-assessment.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+                            </svg>
+                            地址风险评估
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="contract-analysis.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20Z"/>
+                            </svg>
+                            合约代码分析
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="monitoring-center.html" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM15.5 16L11 12.5V7H12.5V11.5L16 14.5L15.5 16Z"/>
+                            </svg>
+                            监控中心
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="analysis-reports.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
+                            </svg>
+                            分析报告
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="system-settings.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                            </svg>
+                            系统设置
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-title-section">
+                    <h1>实时监控中心</h1>
+                    <p class="page-subtitle">24/7全天候区块链安全态势感知与威胁预警</p>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>系统运行正常</span>
+                </div>
+            </div>
+
+            <!-- 顶部统计卡片 -->
+            <section class="top-stats">
+                <div class="stat-card">
+                    <div class="stat-icon threats">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11.5C15.4,11.5 16,12.4 16,13V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V13C8,12.4 8.4,11.5 9,11.5V10.5C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,8.7 10.2,10.5V11.5H13.8V10.5C13.8,8.7 12.8,8.2 12,8.2Z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="threatsToday">147</h3>
+                        <div class="stat-label">今日检测威胁</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon scans">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="scansCompleted">2,847</h3>
+                        <div class="stat-label">完成扫描</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon alerts">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeAlerts">23</h3>
+                        <div class="stat-label">活跃预警</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon blocked">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M16.59,7.58L10,14.17L7.41,11.59L6,13L10,17L18,9L16.59,7.58Z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="blockedAttacks">89</h3>
+                        <div class="stat-label">拦截攻击</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 主要监控区域 -->
+            <section class="monitoring-grid">
+                <!-- 实时威胁地图 -->
+                <div class="monitor-card">
+                    <h3 class="card-title">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,2C15.31,2 18,4.66 18,7.95C18,12.41 12,19 12,19S6,12.41 6,7.95C6,4.66 8.69,2 12,2M12,6A2,2 0 0,0 10,8A2,2 0 0,0 12,10A2,2 0 0,0 14,8A2,2 0 0,0 12,6Z"/>
+                        </svg>
+                        全球威胁态势图
+                    </h3>
+                    <div class="threat-map">
+                        <div class="map-placeholder">
+                            实时威胁地图将在这里显示...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 实时威胁列表 -->
+                <div class="monitor-card">
+                    <h3 class="card-title">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"/>
+                        </svg>
+                        最新威胁情报
+                    </h3>
+                    <div class="threat-list">
+                        <div class="threat-item">
+                            <div class="threat-level level-critical"></div>
+                            <div class="threat-content">
+                                <div class="threat-title">闪电贷攻击检测</div>
+                                <div class="threat-desc">检测到针对DEX的闪电贷套利攻击</div>
+                                <div class="threat-time">2分钟前</div>
+                            </div>
+                        </div>
+                        <div class="threat-item">
+                            <div class="threat-level level-high"></div>
+                            <div class="threat-content">
+                                <div class="threat-title">可疑地址活动</div>
+                                <div class="threat-desc">0x742d...发现异常大额转账</div>
+                                <div class="threat-time">5分钟前</div>
+                            </div>
+                        </div>
+                        <div class="threat-item">
+                            <div class="threat-level level-medium"></div>
+                            <div class="threat-content">
+                                <div class="threat-title">合约漏洞预警</div>
+                                <div class="threat-desc">新部署合约存在重入风险</div>
+                                <div class="threat-time">8分钟前</div>
+                            </div>
+                        </div>
+                        <div class="threat-item">
+                            <div class="threat-level level-critical"></div>
+                            <div class="threat-content">
+                                <div class="threat-title">钓鱼网站监测</div>
+                                <div class="threat-desc">发现仿冒主流DeFi项目的钓鱼站</div>
+                                <div class="threat-time">12分钟前</div>
+                            </div>
+                        </div>
+                        <div class="threat-item">
+                            <div class="threat-level level-high"></div>
+                            <div class="threat-content">
+                                <div class="threat-title">恶意代币识别</div>
+                                <div class="threat-desc">检测到蜜罐代币合约</div>
+                                <div class="threat-time">15分钟前</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统监控区域 -->
+            <section class="system-monitoring">
+                <!-- 系统性能监控 -->
+                <div class="monitor-item">
+                    <h3 class="card-title">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3,3H21V21H3V3M5,5V19H19V5H5M7.5,18A1.5,1.5 0 0,0 9,16.5A1.5,1.5 0 0,0 7.5,15A1.5,1.5 0 0,0 6,16.5A1.5,1.5 0 0,0 7.5,18M7.5,13A1.5,1.5 0 0,0 9,11.5A1.5,1.5 0 0,0 7.5,10A1.5,1.5 0 0,0 6,11.5A1.5,1.5 0 0,0 7.5,13M7.5,8A1.5,1.5 0 0,0 9,6.5A1.5,1.5 0 0,0 7.5,5A1.5,1.5 0 0,0 6,6.5A1.5,1.5 0 0,0 7.5,8M16.5,15H11V17H16.5V15M16.5,10H11V12H16.5V10M16.5,5H11V7H16.5V5Z"/>
+                        </svg>
+                        系统性能
+                    </h3>
+                    
+                    <div class="monitor-metric">
+                        <span class="metric-name">CPU使用率</span>
+                        <span class="metric-value">45%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-normal" style="width: 45%"></div>
+                    </div>
+
+                    <div class="monitor-metric">
+                        <span class="metric-name">内存使用率</span>
+                        <span class="metric-value">67%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-warning" style="width: 67%"></div>
+                    </div>
+
+                    <div class="monitor-metric">
+                        <span class="metric-name">磁盘使用率</span>
+                        <span class="metric-value">23%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-normal" style="width: 23%"></div>
+                    </div>
+                </div>
+
+                <!-- 网络监控 -->
+                <div class="monitor-item">
+                    <h3 class="card-title">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M1,11H3.17C3.58,9.83 4.69,9 6,9C6.65,9 7.25,9.28 7.68,9.72L9.43,7.97C9.16,7.41 9,6.79 9,6.13C9,4.65 10.35,3.5 12,3.5S15,4.65 15,6.13C15,6.79 14.84,7.41 14.57,7.97L16.32,9.72C16.75,9.28 17.35,9 18,9C19.31,9 20.42,9.83 20.83,11H23V13H20.83C20.42,14.17 19.31,15 18,15C17.35,15 16.75,14.72 16.32,14.28L14.57,16.03C14.84,16.59 15,17.21 15,17.87C15,19.35 13.65,20.5 12,20.5S9,19.35 9,17.87C9,17.21 9.16,16.59 9.43,16.03L7.68,14.28C7.25,14.72 6.65,15 6,15C4.69,15 3.58,14.17 3.17,13H1V11Z"/>
+                        </svg>
+                        网络状态
+                    </h3>
+                    
+                    <div class="monitor-metric">
+                        <span class="metric-name">网络延迟</span>
+                        <span class="metric-value">12ms</span>
+                    </div>
+
+                    <div class="monitor-metric">
+                        <span class="metric-name">每秒请求</span>
+                        <span class="metric-value">1,247</span>
+                    </div>
+
+                    <div class="monitor-metric">
+                        <span class="metric-name">活跃连接</span>
+                        <span class="metric-value">89</span>
+                    </div>
+
+                    <div class="network-chart">
+                        <div style="color: var(--text-muted);">网络流量图表</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 快速操作 -->
+            <div class="quick-actions">
+                <button class="action-btn btn-primary" onclick="startEmergencyMode()">
+                    启动应急模式
+                </button>
+                <button class="action-btn btn-secondary" onclick="exportReports()">
+                    导出监控报告
+                </button>
+                <button class="action-btn btn-secondary" onclick="configureAlerts()">
+                    配置预警规则
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 实时数据更新
+        function updateRealTimeData() {
+            // 更新统计数据
+            const threatsElement = document.getElementById('threatsToday');
+            const scansElement = document.getElementById('scansCompleted');
+            const alertsElement = document.getElementById('activeAlerts');
+            const blockedElement = document.getElementById('blockedAttacks');
+
+            // 模拟数据增长
+            if (Math.random() > 0.7) {
+                threatsElement.textContent = parseInt(threatsElement.textContent) + Math.floor(Math.random() * 3);
+            }
+            if (Math.random() > 0.8) {
+                scansElement.textContent = parseInt(scansElement.textContent) + Math.floor(Math.random() * 10);
+            }
+            if (Math.random() > 0.9) {
+                alertsElement.textContent = parseInt(alertsElement.textContent) + Math.floor(Math.random() * 2);
+            }
+            if (Math.random() > 0.85) {
+                blockedElement.textContent = parseInt(blockedElement.textContent) + Math.floor(Math.random() * 5);
+            }
+
+            // 更新系统性能数据
+            updateSystemMetrics();
+        }
+
+        function updateSystemMetrics() {
+            const cpuBar = document.querySelector('.progress-fill');
+            const memoryBar = document.querySelectorAll('.progress-fill')[1];
+            const diskBar = document.querySelectorAll('.progress-fill')[2];
+
+            // 模拟性能数据变化
+            const cpuUsage = Math.max(30, Math.min(80, parseInt(cpuBar.style.width) + (Math.random() - 0.5) * 10));
+            const memoryUsage = Math.max(50, Math.min(90, parseInt(memoryBar.style.width) + (Math.random() - 0.5) * 8));
+            const diskUsage = Math.max(20, Math.min(40, parseInt(diskBar.style.width) + (Math.random() - 0.5) * 5));
+
+            cpuBar.style.width = cpuUsage + '%';
+            memoryBar.style.width = memoryUsage + '%';
+            diskBar.style.width = diskUsage + '%';
+
+            // 更新显示的数值
+            document.querySelectorAll('.metric-value')[0].textContent = Math.round(cpuUsage) + '%';
+            document.querySelectorAll('.metric-value')[1].textContent = Math.round(memoryUsage) + '%';
+            document.querySelectorAll('.metric-value')[2].textContent = Math.round(diskUsage) + '%';
+
+            // 更新进度条颜色
+            updateProgressBarColor(cpuBar, cpuUsage);
+            updateProgressBarColor(memoryBar, memoryUsage);
+            updateProgressBarColor(diskBar, diskUsage);
+        }
+
+        function updateProgressBarColor(bar, usage) {
+            bar.className = 'progress-fill';
+            if (usage < 50) {
+                bar.classList.add('progress-normal');
+            } else if (usage < 80) {
+                bar.classList.add('progress-warning');
+            } else {
+                bar.classList.add('progress-critical');
+            }
+        }
+
+        // 快速操作函数
+        function startEmergencyMode() {
+            alert('应急模式已启动！所有安全规则已设置为最高级别。');
+        }
+
+        function exportReports() {
+            alert('监控报告导出中...请稍候。');
+        }
+
+        function configureAlerts() {
+            alert('预警规则配置页面将打开...');
+        }
+
+        // 威胁列表自动更新
+        function addNewThreat() {
+            const threatTypes = [
+                { title: '智能合约漏洞', desc: '发现新的代币合约存在授权漏洞', level: 'level-high' },
+                { title: 'MEV攻击检测', desc: '检测到抢跑交易攻击行为', level: 'level-critical' },
+                { title: '异常交易模式', desc: '发现疑似洗钱的交易链路', level: 'level-medium' },
+                { title: '恶意地址标记', desc: '新增高风险地址到黑名单', level: 'level-high' },
+                { title: '跨链桥风险', desc: '跨链桥合约出现异常大额提取', level: 'level-critical' }
+            ];
+
+            const threatList = document.querySelector('.threat-list');
+            const randomThreat = threatTypes[Math.floor(Math.random() * threatTypes.length)];
+            
+            const newThreat = document.createElement('div');
+            newThreat.className = 'threat-item';
+            newThreat.innerHTML = `
+                <div class="threat-level ${randomThreat.level}"></div>
+                <div class="threat-content">
+                    <div class="threat-title">${randomThreat.title}</div>
+                    <div class="threat-desc">${randomThreat.desc}</div>
+                    <div class="threat-time">刚刚</div>
+                </div>
+            `;
+
+            threatList.insertBefore(newThreat, threatList.firstChild);
+
+            // 保持列表长度，移除旧项目
+            if (threatList.children.length > 6) {
+                threatList.removeChild(threatList.lastChild);
+            }
+
+            // 更新时间戳
+            updateTimeStamps();
+        }
+
+        function updateTimeStamps() {
+            const timeElements = document.querySelectorAll('.threat-time');
+            const times = ['刚刚', '2分钟前', '5分钟前', '8分钟前', '12分钟前', '15分钟前'];
+            
+            timeElements.forEach((element, index) => {
+                if (index < times.length) {
+                    element.textContent = times[index];
+                }
+            });
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 启动实时数据更新
+            setInterval(updateRealTimeData, 5000);
+            
+            // 启动威胁情报更新
+            setInterval(addNewThreat, 15000);
+
+            // 页面加载动画
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html> 

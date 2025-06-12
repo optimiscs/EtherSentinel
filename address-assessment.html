@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地址风险评估 - 链安卫士</title>
+    <style>
+        :root {
+            --primary-dark: #1a1f2e;
+            --secondary-dark: #2d3748;
+            --accent-blue: #4299e1;
+            --accent-cyan: #38b2ac;
+            --accent-green: #48bb78;
+            --accent-red: #f56565;
+            --accent-orange: #ed8936;
+            --text-light: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --hover-bg: #2d3748;
+            --gradient-bg: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+            --success-bg: rgba(72, 187, 120, 0.1);
+            --warning-bg: rgba(237, 137, 54, 0.1);
+            --danger-bg: rgba(245, 101, 101, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 280px;
+            background: var(--gradient-bg);
+            padding: 2rem 1.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 3rem;
+            padding: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-cyan);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            text-decoration: none;
+            color: var(--text-muted);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--hover-bg);
+            color: var(--accent-cyan);
+            transform: translateX(5px);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* 地址输入区域 */
+        .address-input-section {
+            background: var(--secondary-dark);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .address-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-light);
+            font-size: 1rem;
+            font-family: 'Monaco', 'Consolas', monospace;
+            transition: border-color 0.3s ease;
+        }
+
+        .address-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .analyze-btn {
+            padding: 1rem 2rem;
+            background: var(--accent-cyan);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .analyze-btn:hover {
+            background: #319795;
+            transform: translateY(-2px);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 结果展示区域 */
+        .results-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .risk-overview-card {
+            background: var(--secondary-dark);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .risk-score {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .score-value {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-low { color: var(--accent-green); }
+        .score-medium { color: var(--accent-orange); }
+        .score-high { color: var(--accent-red); }
+
+        .score-label {
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .risk-factors {
+            list-style: none;
+        }
+
+        .risk-factor {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .risk-factor:last-child {
+            border-bottom: none;
+        }
+
+        .factor-name {
+            color: var(--text-light);
+        }
+
+        .factor-value {
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .factor-low {
+            background: var(--success-bg);
+            color: var(--accent-green);
+        }
+
+        .factor-medium {
+            background: var(--warning-bg);
+            color: var(--accent-orange);
+        }
+
+        .factor-high {
+            background: var(--danger-bg);
+            color: var(--accent-red);
+        }
+
+        /* 地址信息卡片 */
+        .address-info-card {
+            background: var(--secondary-dark);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .address-details {
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: var(--text-light);
+            font-weight: 600;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+
+        .address-value {
+            font-size: 0.875rem;
+            word-break: break-all;
+        }
+
+        /* 关联网络图区域 */
+        .network-section {
+            background: var(--secondary-dark);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .network-container {
+            height: 400px;
+            background: var(--primary-dark);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .network-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 1.125rem;
+        }
+
+        /* 交易历史区域 */
+        .transaction-history {
+            background: var(--secondary-dark);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .transaction-table th,
+        .transaction-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .transaction-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .transaction-table td {
+            color: var(--text-light);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+        }
+
+        .tx-hash {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+
+        .tx-hash:hover {
+            text-decoration: underline;
+        }
+
+        .risk-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-safe {
+            background: var(--success-bg);
+            color: var(--accent-green);
+        }
+
+        .badge-suspicious {
+            background: var(--warning-bg);
+            color: var(--accent-orange);
+        }
+
+        .badge-malicious {
+            background: var(--danger-bg);
+            color: var(--accent-red);
+        }
+
+        /* 加载状态 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 31, 46, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .results-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+                        <path d="M2 17L12 22L22 17"/>
+                        <path d="M2 12L12 17L22 12"/>
+                    </svg>
+                </div>
+                <h1>链安卫士</h1>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="dashboard.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 13H11V3H3V13ZM3 21H11V15H3V21ZM13 21H21V11H13V21ZM13 3V9H21V3H13Z"/>
+                            </svg>
+                            主仪表盘
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="transaction-detection.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/>
+                            </svg>
+                            恶意交易检测
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="address-assessment.html" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+                            </svg>
+                            地址风险评估
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="contract-analysis.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20Z"/>
+                            </svg>
+                            合约代码分析
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="monitoring-center.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM15.5 16L11 12.5V7H12.5V11.5L16 14.5L15.5 16Z"/>
+                            </svg>
+                            监控中心
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="analysis-reports.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z"/>
+                            </svg>
+                            分析报告
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="system-settings.html" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                            </svg>
+                            系统设置
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">地址风险评估</h1>
+                <p class="page-subtitle">基于图神经网络技术，深度分析区块链地址的安全风险等级</p>
+            </div>
+
+            <!-- 地址输入区域 -->
+            <section class="address-input-section">
+                <div class="input-group">
+                    <div class="input-field">
+                        <label for="addressInput" class="input-label">区块链地址</label>
+                        <input 
+                            type="text" 
+                            id="addressInput" 
+                            class="address-input"
+                            placeholder="请输入以太坊地址 (0x...)"
+                            value=""
+                        >
+                    </div>
+                    <button class="analyze-btn" onclick="analyzeAddress()">
+                        分析地址风险
+                    </button>
+                </div>
+            </section>
+
+            <!-- 分析结果区域 -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <!-- 风险概览卡片 -->
+                <div class="risk-overview-card">
+                    <h3 class="card-title">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+                        </svg>
+                        风险评估结果
+                    </h3>
+                    <div class="risk-score">
+                        <div class="score-value score-low" id="riskScore">23</div>
+                        <div class="score-label score-low" id="riskLevel">低风险</div>
+                    </div>
+                    <ul class="risk-factors">
+                        <li class="risk-factor">
+                            <span class="factor-name">恶意交易关联</span>
+                            <span class="factor-value factor-low">低</span>
+                        </li>
+                        <li class="risk-factor">
+                            <span class="factor-name">混币器使用</span>
+                            <span class="factor-value factor-low">无</span>
+                        </li>
+                        <li class="risk-factor">
+                            <span class="factor-name">黑名单匹配</span>
+                            <span class="factor-value factor-low">无</span>
+                        </li>
+                        <li class="risk-factor">
+                            <span class="factor-name">异常交易模式</span>
+                            <span class="factor-value factor-medium">中</span>
+                        </li>
+                        <li class="risk-factor">
+                            <span class="factor-name">地址年龄</span>
+                            <span class="factor-value factor-low">正常</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 地址信息卡片 -->
+                <div class="address-info-card">
+                    <h3 class="card-title">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+                        </svg>
+                        地址详细信息
+                    </h3>
+                    <div class="address-details">
+                        <div class="detail-item">
+                            <span class="detail-label">地址</span>
+                            <span class="detail-value address-value" id="addressValue">0x742d35Cc6634C0532925a3b8D62000000</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">余额</span>
+                            <span class="detail-value" id="balanceValue">12.457 ETH</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">交易笔数</span>
+                            <span class="detail-value" id="txCountValue">1,234</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">首次活动</span>
+                            <span class="detail-value" id="firstSeenValue">2023-03-15</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">最后活动</span>
+                            <span class="detail-value" id="lastSeenValue">2024-01-08</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">地址类型</span>
+                            <span class="detail-value" id="addressTypeValue">外部账户</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 关联网络图 -->
+            <section class="network-section" id="networkSection" style="display: none;">
+                <h3 class="card-title">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M1,11H3.17C3.58,9.83 4.69,9 6,9C6.65,9 7.25,9.28 7.68,9.72L9.43,7.97C9.16,7.41 9,6.79 9,6.13C9,4.65 10.35,3.5 12,3.5S15,4.65 15,6.13C15,6.79 14.84,7.41 14.57,7.97L16.32,9.72C16.75,9.28 17.35,9 18,9C19.31,9 20.42,9.83 20.83,11H23V13H20.83C20.42,14.17 19.31,15 18,15C17.35,15 16.75,14.72 16.32,14.28L14.57,16.03C14.84,16.59 15,17.21 15,17.87C15,19.35 13.65,20.5 12,20.5S9,19.35 9,17.87C9,17.21 9.16,16.59 9.43,16.03L7.68,14.28C7.25,14.72 6.65,15 6,15C4.69,15 3.58,14.17 3.17,13H1V11Z"/>
+                    </svg>
+                    关联地址网络图
+                </h3>
+                <div class="network-container">
+                    <div class="network-placeholder">
+                        关联网络图将在这里显示...
+                    </div>
+                </div>
+            </section>
+
+            <!-- 交易历史 -->
+            <section class="transaction-history" id="transactionHistory" style="display: none;">
+                <h3 class="card-title">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13,3A9,9 0 0,0 4,12H1L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3Z"/>
+                    </svg>
+                    最近交易记录 (风险标记)
+                </h3>
+                <table class="transaction-table">
+                    <thead>
+                        <tr>
+                            <th>交易哈希</th>
+                            <th>时间</th>
+                            <th>对方地址</th>
+                            <th>金额 (ETH)</th>
+                            <th>风险等级</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="#" class="tx-hash">0xabcd...1234</a></td>
+                            <td>2024-01-08 14:23:15</td>
+                            <td>0x742d...0000</td>
+                            <td>0.5</td>
+                            <td><span class="risk-badge badge-safe">安全</span></td>
+                        </tr>
+                        <tr>
+                            <td><a href="#" class="tx-hash">0xefgh...5678</a></td>
+                            <td>2024-01-07 09:45:33</td>
+                            <td>0x853a...1111</td>
+                            <td>2.1</td>
+                            <td><span class="risk-badge badge-suspicious">可疑</span></td>
+                        </tr>
+                        <tr>
+                            <td><a href="#" class="tx-hash">0xijkl...9012</a></td>
+                            <td>2024-01-06 18:12:07</td>
+                            <td>0x964b...2222</td>
+                            <td>0.8</td>
+                            <td><span class="risk-badge badge-safe">安全</span></td>
+                        </tr>
+                        <tr>
+                            <td><a href="#" class="tx-hash">0xmnop...3456</a></td>
+                            <td>2024-01-05 22:56:41</td>
+                            <td>0xa75c...3333</td>
+                            <td>5.0</td>
+                            <td><span class="risk-badge badge-malicious">恶意</span></td>
+                        </tr>
+                        <tr>
+                            <td><a href="#" class="tx-hash">0xqrst...7890</a></td>
+                            <td>2024-01-04 11:34:28</td>
+                            <td>0xb86d...4444</td>
+                            <td>1.2</td>
+                            <td><span class="risk-badge badge-safe">安全</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <!-- 加载状态遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>正在分析地址风险，请稍候...</p>
+        </div>
+    </div>
+
+    <script>
+        // 地址分析功能
+        function analyzeAddress() {
+            const addressInput = document.getElementById('addressInput');
+            const address = addressInput.value.trim();
+
+            // 验证地址格式
+            if (!address) {
+                alert('请输入区块链地址');
+                return;
+            }
+
+            if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
+                alert('请输入有效的以太坊地址格式');
+                return;
+            }
+
+            // 显示加载状态
+            showLoading();
+
+            // 模拟分析过程
+            setTimeout(() => {
+                hideLoading();
+                showResults(address);
+            }, 2000);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.querySelector('.analyze-btn').disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.querySelector('.analyze-btn').disabled = false;
+        }
+
+        function showResults(address) {
+            // 更新地址信息
+            document.getElementById('addressValue').textContent = address;
+            
+            // 显示结果区域
+            document.getElementById('resultsSection').style.display = 'grid';
+            document.getElementById('networkSection').style.display = 'block';
+            document.getElementById('transactionHistory').style.display = 'block';
+
+            // 模拟动态风险评分更新
+            animateRiskScore();
+        }
+
+        function animateRiskScore() {
+            const scoreElement = document.getElementById('riskScore');
+            const levelElement = document.getElementById('riskLevel');
+            let score = 0;
+            const targetScore = 23;
+
+            const interval = setInterval(() => {
+                score++;
+                scoreElement.textContent = score;
+
+                if (score >= targetScore) {
+                    clearInterval(interval);
+                    updateRiskLevel(targetScore);
+                }
+            }, 50);
+        }
+
+        function updateRiskLevel(score) {
+            const scoreElement = document.getElementById('riskScore');
+            const levelElement = document.getElementById('riskLevel');
+
+            // 清除之前的样式类
+            scoreElement.className = 'score-value';
+            levelElement.className = 'score-label';
+
+            if (score <= 30) {
+                scoreElement.classList.add('score-low');
+                levelElement.classList.add('score-low');
+                levelElement.textContent = '低风险';
+            } else if (score <= 70) {
+                scoreElement.classList.add('score-medium');
+                levelElement.classList.add('score-medium');
+                levelElement.textContent = '中风险';
+            } else {
+                scoreElement.classList.add('score-high');
+                levelElement.classList.add('score-high');
+                levelElement.textContent = '高风险';
+            }
+        }
+
+        // 导航激活状态管理
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // 移除所有激活状态
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    // 添加当前激活状态
+                    this.classList.add('active');
+                });
+            });
+
+            // 回车键快速分析
+            document.getElementById('addressInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    analyzeAddress();
+                }
+            });
+
+            // 示例地址填充
+            const exampleAddresses = [
+                '0x742d35Cc6634C0532925a3b8D40c65dC6c23f9c1',
+                '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+                '0xA0b86a33E6441B41C84b5FAD8ba8E0b4cF68b2A5'
+            ];
+
+            // 双击输入框填充示例地址
+            document.getElementById('addressInput').addEventListener('dblclick', function() {
+                const randomAddress = exampleAddresses[Math.floor(Math.random() * exampleAddresses.length)];
+                this.value = randomAddress;
+            });
+        });
+
+        // 页面加载动画
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html> 
