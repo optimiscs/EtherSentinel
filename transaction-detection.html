@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>恶意交易检测 - 链安卫士</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        :root {
+            --primary-color: #1A2980;
+            --primary-light: #26D0CE;
+            --secondary-color: #00d2ff;
+            --success-color: #00C853;
+            --warning-color: #FF9800;
+            --danger-color: #FF5252;
+            --dark-color: #333;
+            --light-color: #f5f7fa;
+            --text-color: #555;
+            --border-color: #e4e9f2;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background-color: var(--light-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #182572 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 10;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary-color);
+        }
+
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            padding: 15px 0;
+        }
+
+        .nav-item {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left: 3px solid var(--secondary-color);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            opacity: 0.9;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 0;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            height: 70px;
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .page-title {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            cursor: pointer;
+            position: relative;
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .notification-icon:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 18px;
+            height: 18px;
+            background-color: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+            background-color: var(--light-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: var(--text-color);
+        }
+
+        /* 内容布局 */
+        .content-wrapper {
+            padding: 25px;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+
+        .col {
+            padding: 0 15px;
+            margin-bottom: 25px;
+        }
+
+        .col-4 {
+            width: 33.333333%;
+        }
+
+        .col-8 {
+            width: 66.666667%;
+        }
+
+        .col-12 {
+            width: 100%;
+        }
+
+        /* 卡片组件 */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: var(--transition);
+            height: 100%;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .card-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 输入组件 */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            background-color: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 41, 128, 0.1);
+        }
+
+        .input-field.error {
+            border-color: var(--danger-color);
+        }
+
+        .input-help {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            margin-top: 5px;
+        }
+
+        .input-error {
+            font-size: 0.8rem;
+            color: var(--danger-color);
+            margin-top: 5px;
+        }
+
+        /* 按钮 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background-color: var(--light-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: white;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn svg {
+            margin-right: 8px;
+        }
+
+        /* 徽章 */
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: rgba(0, 200, 83, 0.1);
+            color: var(--success-color);
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background-color: rgba(255, 82, 82, 0.1);
+            color: var(--danger-color);
+        }
+
+        .badge-primary {
+            background-color: rgba(26, 41, 128, 0.1);
+            color: var(--primary-color);
+        }
+
+        /* 网络图容器 */
+        .network-graph {
+            height: 400px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .graph-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        .graph-placeholder svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* 分析结果 */
+        .analysis-result {
+            border-left: 4px solid var(--primary-color);
+            background-color: rgba(26, 41, 128, 0.05);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+        }
+
+        .risk-level {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .risk-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+
+        .risk-score {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--light-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        /* 历史记录 */
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-hash {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            background-color: rgba(26, 41, 128, 0.05);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        .history-time {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            margin-left: auto;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .col-8, .col-4 {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 左侧导航栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9"/>
+                    </svg>
+                </div>
+                <span class="logo-text">链安卫士</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M13,3V9H21V3M13,21H21V11H13M3,21H11V15H3M3,13H11V3H3V13Z" />
+                        </svg>
+                        <span>主仪表盘</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#transaction" class="nav-link active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11,14H13A2,2 0 0,1 15,16V18A2,2 0 0,1 13,20H11V22H9V20H7V18H11A1,1 0 0,0 12,17V15A1,1 0 0,0 11,14H9A2,2 0 0,1 7,12V10A2,2 0 0,1 9,8H11V6H13V8H15V10H11A1,1 0 0,0 10,11V13A1,1 0 0,0 11,14Z" />
+                        </svg>
+                        <span>恶意交易检测</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#address" class="nav-link">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22S19,14.25 19,9A7,7 0 0,0 12,2Z" />
+                        </svg>
+                        <span>地址风险评估</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contract" class="nav-link">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                        <span>合约代码分析</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#monitoring" class="nav-link">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z" />
+                        </svg>
+                        <span>监控中心</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#reports" class="nav-link">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                        <span>分析报告</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#settings" class="nav-link">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
+                        </svg>
+                        <span>系统设置</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer" style="padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: auto;">
+                <a href="#logout" class="nav-link" style="justify-content: flex-start; padding: 10px 0;">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z" />
+                    </svg>
+                    <span>退出登录</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 顶部状态栏 -->
+            <div class="topbar">
+                <div>
+                    <h1 class="page-title">恶意交易检测</h1>
+                    <div class="breadcrumb">
+                        <a href="dashboard.html">主页</a>
+                        <span style="margin: 0 8px; color: var(--border-color);">/</span>
+                        <span>恶意交易检测</span>
+                    </div>
+                </div>
+                <div class="user-menu">
+                    <div class="notification-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21" />
+                        </svg>
+                        <div class="notification-badge">3</div>
+                    </div>
+                    <div class="user-profile">
+                        <div class="user-avatar">管理员</div>
+                        <div class="user-info">
+                            <div class="user-name">安全分析师</div>
+                            <div class="user-role">链安卫士 / 管理员</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <!-- 交易输入区域 -->
+                <div class="row">
+                    <div class="col col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+                                        <path d="M9,10V12H7V10H9M13,10V12H11V10H13M17,10V12H15V10H17M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H6V1H8V3H16V1H18V3H19M19,19V8H5V19H19M9,14V16H7V14H9M13,14V16H11V14H13M17,14V16H15V14H17"/>
+                                    </svg>
+                                    交易哈希输入
+                                </h3>
+                                <div class="card-tools">
+                                    <span class="badge badge-primary">准确率: 92%</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="input-group">
+                                    <label class="input-label">交易哈希 (Transaction Hash)</label>
+                                    <input type="text" class="input-field" id="transactionHash" 
+                                           placeholder="请输入交易哈希，例如：0x7f8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4"
+                                           maxlength="66">
+                                    <div class="input-help">
+                                        支持以太坊等主流区块链的交易哈希格式，哈希长度为66位（包含0x前缀）
+                                    </div>
+                                    <div class="input-error" id="hashError" style="display: none;"></div>
+                                </div>
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <button class="btn btn-primary" onclick="analyzeTransaction()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                                        </svg>
+                                        开始检测分析
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="clearInput()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                                        </svg>
+                                        清空输入
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="loadExample()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                        </svg>
+                                        载入示例
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分析结果区域 -->
+                <div class="row">
+                    <!-- 交易网络图 -->
+                    <div class="col col-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">交易关系网络图</h3>
+                                <div class="card-tools">
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="exportGraph()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                        </svg>
+                                        导出图片
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body" style="padding: 0;">
+                                <div class="network-graph" id="networkGraph">
+                                    <div class="graph-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5A2,2 0 0,0 3,3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V9M19,19H5V3H13V9H19V19Z"/>
+                                        </svg>
+                                        <div>请输入交易哈希开始分析</div>
+                                        <div style="font-size: 0.8rem; margin-top: 8px; color: var(--text-color);">网络图将展示交易节点间的关联关系</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 图例 -->
+                                <div style="padding: 15px 20px; border-top: 1px solid var(--border-color); background-color: rgba(0,0,0,0.01);">
+                                    <div style="display: flex; align-items: center; gap: 20px; font-size: 0.9rem;">
+                                        <div style="display: flex; align-items: center;">
+                                            <div style="width: 12px; height: 12px; background-color: var(--success-color); border-radius: 50%; margin-right: 6px;"></div>
+                                            <span>安全节点</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <div style="width: 12px; height: 12px; background-color: var(--warning-color); border-radius: 50%; margin-right: 6px;"></div>
+                                            <span>可疑节点</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <div style="width: 12px; height: 12px; background-color: var(--danger-color); border-radius: 50%; margin-right: 6px;"></div>
+                                            <span>恶意节点</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <div style="width: 12px; height: 2px; background-color: var(--primary-color); margin-right: 6px;"></div>
+                                            <span>交易关联</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风险分析结果 -->
+                    <div class="col col-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">风险分析结果</h3>
+                            </div>
+                            <div class="card-body" id="analysisResults">
+                                <div style="text-align: center; padding: 40px 20px; color: var(--text-color);">
+                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor" style="opacity: 0.3; margin-bottom: 15px;">
+                                        <path d="M11,15H13V17H11V15M11,7H13V13H11V7M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20Z"/>
+                                    </svg>
+                                    <div>暂无分析结果</div>
+                                    <div style="font-size: 0.8rem; margin-top: 8px;">输入交易哈希后将显示详细的安全分析</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 详细信息 -->
+                        <div class="card" style="margin-top: 20px;">
+                            <div class="card-header">
+                                <h3 class="card-title">交易详细信息</h3>
+                            </div>
+                            <div class="card-body" id="transactionDetails">
+                                <div style="text-align: center; padding: 20px; color: var(--text-color);">
+                                    <div style="font-size: 0.9rem;">等待分析数据...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 历史检测记录 -->
+                <div class="row">
+                    <div class="col col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">最近检测记录</h3>
+                                <div class="card-tools">
+                                    <a href="#" style="color: var(--primary-color); text-decoration: none; font-size: 0.9rem;">查看全部记录</a>
+                                </div>
+                            </div>
+                            <div class="card-body" style="padding: 0;">
+                                <div class="history-item" style="padding: 15px 20px;">
+                                    <div class="history-hash">0x7f8a...3b2c</div>
+                                    <span class="badge badge-danger">高危</span>
+                                    <div style="margin: 0 15px; flex: 1;">
+                                        <div style="font-weight: 500; margin-bottom: 2px;">钓鱼攻击交易</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-color);">风险评分: 89/100</div>
+                                    </div>
+                                    <div class="history-time">5分钟前</div>
+                                </div>
+                                <div class="history-item" style="padding: 15px 20px;">
+                                    <div class="history-hash">0x1a5e...9f8d</div>
+                                    <span class="badge badge-warning">中危</span>
+                                    <div style="margin: 0 15px; flex: 1;">
+                                        <div style="font-weight: 500; margin-bottom: 2px;">可疑资金流向</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-color);">风险评分: 67/100</div>
+                                    </div>
+                                    <div class="history-time">12分钟前</div>
+                                </div>
+                                <div class="history-item" style="padding: 15px 20px;">
+                                    <div class="history-hash">0x4d2a...7b8e</div>
+                                    <span class="badge badge-success">安全</span>
+                                    <div style="margin: 0 15px; flex: 1;">
+                                        <div style="font-weight: 500; margin-bottom: 2px;">正常交易</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-color);">风险评分: 15/100</div>
+                                    </div>
+                                    <div class="history-time">18分钟前</div>
+                                </div>
+                                <div class="history-item" style="padding: 15px 20px;">
+                                    <div class="history-hash">0x9c7f...2e1a</div>
+                                    <span class="badge badge-warning">中危</span>
+                                    <div style="margin: 0 15px; flex: 1;">
+                                        <div style="font-weight: 500; margin-bottom: 2px;">异常合约调用</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-color);">风险评分: 58/100</div>
+                                    </div>
+                                    <div class="history-time">25分钟前</div>
+                                </div>
+                                <div class="history-item" style="padding: 15px 20px;">
+                                    <div class="history-hash">0x6b8d...4f9c</div>
+                                    <span class="badge badge-success">安全</span>
+                                    <div style="margin: 0 15px; flex: 1;">
+                                        <div style="font-weight: 500; margin-bottom: 2px;">DEX交易</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-color);">风险评分: 8/100</div>
+                                    </div>
+                                    <div class="history-time">32分钟前</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 页面交互功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 导航链接点击效果
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.getAttribute('href').startsWith('#')) {
+                        e.preventDefault();
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    }
+                });
+            });
+
+            // 交易哈希输入验证
+            const hashInput = document.getElementById('transactionHash');
+            const hashError = document.getElementById('hashError');
+
+            hashInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                const isValid = validateTransactionHash(value);
+                
+                if (value.length > 0 && !isValid) {
+                    this.classList.add('error');
+                    hashError.style.display = 'block';
+                    hashError.textContent = '请输入有效的交易哈希格式 (0x开头，66位字符)';
+                } else {
+                    this.classList.remove('error');
+                    hashError.style.display = 'none';
+                }
+            });
+
+            // 自动补全0x前缀
+            hashInput.addEventListener('paste', function(e) {
+                setTimeout(() => {
+                    let value = this.value.trim();
+                    if (value.length > 0 && !value.startsWith('0x')) {
+                        value = '0x' + value;
+                        this.value = value;
+                    }
+                }, 10);
+            });
+        });
+
+        // 验证交易哈希格式
+        function validateTransactionHash(hash) {
+            if (!hash) return true; // 空值允许
+            const regex = /^0x[a-fA-F0-9]{64}$/;
+            return regex.test(hash);
+        }
+
+        // 开始分析交易
+        function analyzeTransaction() {
+            const hashInput = document.getElementById('transactionHash');
+            const hash = hashInput.value.trim();
+            
+            if (!hash) {
+                alert('请输入交易哈希');
+                hashInput.focus();
+                return;
+            }
+            
+            if (!validateTransactionHash(hash)) {
+                alert('请输入有效的交易哈希格式');
+                hashInput.focus();
+                return;
+            }
+
+            // 显示加载状态
+            showLoading();
+            
+            // 模拟分析过程
+            setTimeout(() => {
+                hideLoading();
+                displayAnalysisResults(hash);
+                generateNetworkGraph(hash);
+                showTransactionDetails(hash);
+            }, 2000);
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            const resultsDiv = document.getElementById('analysisResults');
+            const detailsDiv = document.getElementById('transactionDetails');
+            const graphDiv = document.getElementById('networkGraph');
+            
+            const loadingHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div style="margin-left: 15px; color: var(--text-color);">正在分析交易...</div>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = loadingHTML;
+            detailsDiv.innerHTML = loadingHTML.replace('正在分析交易...', '获取交易详情...');
+            graphDiv.innerHTML = loadingHTML.replace('正在分析交易...', '构建网络图...');
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            // 加载完成后会被结果替换
+        }
+
+        // 显示分析结果
+        function displayAnalysisResults(hash) {
+            // 模拟分析结果
+            const riskScore = Math.floor(Math.random() * 100);
+            let riskLevel, riskColor, riskIcon;
+            
+            if (riskScore < 30) {
+                riskLevel = '安全';
+                riskColor = 'var(--success-color)';
+                riskIcon = '<path d="M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z"/>';
+            } else if (riskScore < 70) {
+                riskLevel = '中等风险';
+                riskColor = 'var(--warning-color)';
+                riskIcon = '<path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>';
+            } else {
+                riskLevel = '高危险';
+                riskColor = 'var(--danger-color)';
+                riskIcon = '<path d="M12,2L13.09,8.26L22,9L13.09,9.74L12,16L10.91,9.74L2,9L10.91,8.26L12,2Z"/>';
+            }
+
+            const resultsHTML = `
+                <div class="analysis-result" style="border-left-color: ${riskColor}; background-color: ${riskColor}10;">
+                    <div class="risk-level">
+                        <svg class="risk-icon" viewBox="0 0 24 24" fill="${riskColor}">
+                            ${riskIcon}
+                        </svg>
+                        <span style="font-weight: 600;">${riskLevel}</span>
+                        <div class="risk-score" style="color: ${riskColor};">${riskScore}/100</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${riskScore}%; background-color: ${riskColor};"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 15px; color: var(--dark-color);">检测详情</h4>
+                    <div style="space-y: 10px;">
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                            <span style="color: var(--text-color);">交易类型识别</span>
+                            <span style="font-weight: 500;">${riskScore > 70 ? '钓鱼攻击' : riskScore > 40 ? '可疑转账' : '正常交易'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                            <span style="color: var(--text-color);">网络拓扑分析</span>
+                            <span style="font-weight: 500;">${Math.floor(Math.random() * 15) + 3} 个关联节点</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                            <span style="color: var(--text-color);">行为模式匹配</span>
+                            <span style="font-weight: 500;">${riskScore > 60 ? '异常模式' : '正常模式'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                            <span style="color: var(--text-color);">置信度</span>
+                            <span style="font-weight: 500;">${Math.floor(Math.random() * 20) + 80}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="generateReport()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                        生成详细报告
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('analysisResults').innerHTML = resultsHTML;
+        }
+
+        // 显示交易详情
+        function showTransactionDetails(hash) {
+            const detailsHTML = `
+                <div style="font-size: 0.9rem;">
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: var(--text-color); margin-bottom: 5px;">交易哈希</div>
+                        <div style="font-family: monospace; background-color: var(--light-color); padding: 8px; border-radius: 4px; word-break: break-all; font-size: 0.8rem;">${hash}</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <div style="color: var(--text-color); margin-bottom: 5px;">区块高度</div>
+                            <div style="font-weight: 500;">${Math.floor(Math.random() * 1000000) + 18000000}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-color); margin-bottom: 5px;">确认数</div>
+                            <div style="font-weight: 500;">${Math.floor(Math.random() * 50) + 10}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-color); margin-bottom: 5px;">Gas 费用</div>
+                            <div style="font-weight: 500;">${(Math.random() * 0.01).toFixed(4)} ETH</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-color); margin-bottom: 5px;">交易金额</div>
+                            <div style="font-weight: 500;">${(Math.random() * 10).toFixed(2)} ETH</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div style="color: var(--text-color); margin-bottom: 5px;">发送地址</div>
+                        <div style="font-family: monospace; background-color: var(--light-color); padding: 8px; border-radius: 4px; font-size: 0.8rem;">0x${Math.random().toString(16).substr(2, 40)}</div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div style="color: var(--text-color); margin-bottom: 5px;">接收地址</div>
+                        <div style="font-family: monospace; background-color: var(--light-color); padding: 8px; border-radius: 4px; font-size: 0.8rem;">0x${Math.random().toString(16).substr(2, 40)}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('transactionDetails').innerHTML = detailsHTML;
+        }
+
+        // 生成网络图
+        function generateNetworkGraph(hash) {
+            const graphHTML = `
+                <div style="height: 100%; position: relative; background: linear-gradient(135deg, #f8f9fa, #e9ecef); display: flex; align-items: center; justify-content: center;">
+                    <svg width="100%" height="100%" viewBox="0 0 400 300" style="position: absolute;">
+                        <!-- 模拟网络图 -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="var(--primary-color)" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- 连接线 -->
+                        <line x1="200" y1="150" x2="120" y2="100" stroke="var(--primary-color)" stroke-width="2" marker-end="url(#arrowhead)" opacity="0.7"/>
+                        <line x1="200" y1="150" x2="280" y2="100" stroke="var(--primary-color)" stroke-width="2" marker-end="url(#arrowhead)" opacity="0.7"/>
+                        <line x1="200" y1="150" x2="160" y2="220" stroke="var(--primary-color)" stroke-width="2" marker-end="url(#arrowhead)" opacity="0.7"/>
+                        <line x1="200" y1="150" x2="320" y2="200" stroke="var(--danger-color)" stroke-width="2" marker-end="url(#arrowhead)" opacity="0.7"/>
+                        <line x1="120" y1="100" x2="80" y2="60" stroke="var(--primary-color)" stroke-width="1" marker-end="url(#arrowhead)" opacity="0.5"/>
+                        <line x1="280" y1="100" x2="340" y2="70" stroke="var(--warning-color)" stroke-width="2" marker-end="url(#arrowhead)" opacity="0.7"/>
+                        
+                        <!-- 节点 -->
+                        <circle cx="200" cy="150" r="12" fill="var(--warning-color)" stroke="white" stroke-width="3" opacity="0.9"/>
+                        <circle cx="120" cy="100" r="8" fill="var(--success-color)" stroke="white" stroke-width="2" opacity="0.9"/>
+                        <circle cx="280" cy="100" r="8" fill="var(--success-color)" stroke="white" stroke-width="2" opacity="0.9"/>
+                        <circle cx="160" cy="220" r="8" fill="var(--success-color)" stroke="white" stroke-width="2" opacity="0.9"/>
+                        <circle cx="320" cy="200" r="10" fill="var(--danger-color)" stroke="white" stroke-width="3" opacity="0.9"/>
+                        <circle cx="80" cy="60" r="6" fill="var(--success-color)" stroke="white" stroke-width="2" opacity="0.8"/>
+                        <circle cx="340" cy="70" r="8" fill="var(--warning-color)" stroke="white" stroke-width="2" opacity="0.9"/>
+                        
+                        <!-- 节点标签 -->
+                        <text x="200" y="170" text-anchor="middle" font-size="10" fill="var(--dark-color)" font-weight="600">目标交易</text>
+                        <text x="320" y="220" text-anchor="middle" font-size="9" fill="var(--danger-color)" font-weight="500">高危地址</text>
+                        <text x="340" y="90" text-anchor="middle" font-size="9" fill="var(--warning-color)" font-weight="500">可疑地址</text>
+                    </svg>
+                    
+                    <div style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 6px; font-size: 0.8rem;">
+                        <div style="margin-bottom: 5px; color: var(--dark-color); font-weight: 600;">网络统计</div>
+                        <div>节点数: 7</div>
+                        <div>连接数: 6</div>
+                        <div>风险节点: 2</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('networkGraph').innerHTML = graphHTML;
+        }
+
+        // 清空输入
+        function clearInput() {
+            document.getElementById('transactionHash').value = '';
+            document.getElementById('transactionHash').classList.remove('error');
+            document.getElementById('hashError').style.display = 'none';
+        }
+
+        // 载入示例
+        function loadExample() {
+            const examples = [
+                '0x7f8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4',
+                '0x1a5e9f8d2c4b7e1a6f9c3d8b5e2a7f4c1b6e9d3a8f5c2b7e4a1f8d6c9b2e5a3f7c4b1e',
+                '0x4d2a7b8e1c5f9a3d6c2b8e5a1f4c7b9e2d5a8f3c6b1e4a7f2c9b5e8a3f6c1b4e7a2f9'
+            ];
+            
+            const randomExample = examples[Math.floor(Math.random() * examples.length)];
+            document.getElementById('transactionHash').value = randomExample;
+        }
+
+        // 导出图片
+        function exportGraph() {
+            alert('图片导出功能开发中...');
+        }
+
+        // 生成报告
+        function generateReport() {
+            alert('正在生成详细分析报告...');
+        }
+    </script>
+</body>
+</html>
